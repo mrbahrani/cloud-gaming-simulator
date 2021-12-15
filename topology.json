@@ -1,0 +1,29 @@
+{
+    "datacenters": [
+      {
+        "name": "cloud_gaming_dc",
+        "type": "fat_tree",
+        "switches": [
+          {
+            "name": "core_switch1",
+            "sub_switches": [
+              {
+                "name": "aggregate_switch1",
+                "sub_switches": [
+                  {
+                    "name": "edge_switch1",
+                    "hosts": [
+                      {
+                        "name": "host1"
+                      }
+                    ]
+                  }
+
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }

@@ -1,0 +1,19 @@
+{
+  "games": [
+    {
+      "id": 0,
+      "hosts": [2, 3],
+      "players": [
+        {
+          "id": "p0",
+          "packet_distribution": "uniform"
+        },
+        {
+          "id": "p1",
+          "packet_distribution": "uniform"
+
+        }
+      ]
+    }
+  ]
+}
