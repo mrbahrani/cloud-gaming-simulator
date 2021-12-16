@@ -3,6 +3,7 @@ from typing import List
 
 from absqueue import AbstractPriorityQueue
 from event import Event
+from eventcodes import EventCodes
 from game import Game
 from heap import HeapQueue
 
@@ -19,9 +20,20 @@ class SimulationEngine:
     def run_next_event(self):
         _, e = self.event_queue.poll()
         # ToDo run event
-        # Test create another event
-        e = Event()
-        e.end = self.current_time + 5
+        if e.code == EventCodes.PACKET_IN_NETWORK:
+            self.controller.set_path(e.packet)
+            # ToDo create Next Event
+        elif e.code == EventCodes.PACKET_ARRIVED_SWITCH:
+            pass
+        elif e.code == EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE:
+            pass
+        elif e.code == EventCodes.PACKET_ARRIVED_HOST:
+            pass
+        elif e.code == EventCodes.PACKET_PROCESS_FINISHED:
+            pass
+        else:
+            # unknown event
+            pass
         self.event_queue.add_item(e.end, e)
         return e
 
