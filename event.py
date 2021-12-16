@@ -1,5 +1,6 @@
 class Event:
-    def __init__(self, start, end):
+    def __init__(self, code,  start, end, packet):
+        self.code = code
         self.start = 0
         self.end = 0
-        self.message = None
+        self.packet = packet
