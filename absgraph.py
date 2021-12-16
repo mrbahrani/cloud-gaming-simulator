@@ -18,3 +18,6 @@ class AbstractGraph(ABC):
 
     def __iter__(self):
         raise NotImplementedError
+
+    def map(self, identity):
+        raise NotImplementedError
