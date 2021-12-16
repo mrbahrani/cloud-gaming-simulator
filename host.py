@@ -12,3 +12,9 @@ class Host(SimulationEntity):
         self.id = identity
         self.ram = ram
         self.pes = processing_elements
+
+    def estimate_task_time(self, task):
+        pass
+
+    def add_task(self, task):
+        pass
