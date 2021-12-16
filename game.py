@@ -1,6 +1,7 @@
 from typing import List
 
 from event import Event
+from eventcodes import EventCodes
 from player import Player
 
 
@@ -10,10 +11,11 @@ class Game:
         self.hosts = host_list
         self.players: List[Player] = player_list
 
-    def generate_events(self):
+    def generate_events(self, current_time):
         events = []
         for p in self.players:
+            # ToDo Different reach-out time for players
             packet = p.create_next_packet()
-            e = Event()
+            e = Event(EventCodes.PACKET_IN_NETWORK, current_time, current_time + p.reach_out_time)
             events.append(e)
         return events
