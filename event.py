@@ -4,3 +4,4 @@ class Event:
         self.start = 0
         self.end = 0
         self.packet = packet
+        self.device = None
