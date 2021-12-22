@@ -43,7 +43,8 @@ class SimulationEngine:
                 new_event = Event()
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_ARRIVED_HOST:
-            processing_time = self.estimate_processing_time(e)
+            h:Host = e.device
+            processing_time = h.estimate_task_time(e.task)
             new_event = Event(EventCodes.PACKET_PROCESS_FINISHED, self.current_time, self.current_time + processing_time
                               , e.packet)
             self.event_queue.add_item(new_event.end, new_event)
