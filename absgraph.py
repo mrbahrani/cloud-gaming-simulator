@@ -1,8 +1,9 @@
 from abc import ABC
 
+
 class AbstractGraph(ABC):
     def __init__(self):
-        raise NotImplementedError
+        pass
 
     def add_node(self, item):
         raise NotImplementedError
