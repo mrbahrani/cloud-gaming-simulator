@@ -1,15 +1,20 @@
 from absgraph import AbstractGraph
+from gateway import Gateway
 from idgenerator import IDGenerator
 from simulationentity import SimulationEntity
 
 
 class TopologyGraph(AbstractGraph):
     def __init__(self, id_generator: IDGenerator):
+        super().__init__()
         self.adj_list = dict()
         self.id_object_map = dict()
         self.id_gen = id_generator
+        self.gateway = None
 
     def add_node(self, item: SimulationEntity):
+        if isinstance(item, Gateway):
+            self.gateway = item
         while item.id == 0 or item.id in self.adj_list:
             item.id = self.id_gen.getNextId()
         self.adj_list[item.id] = []
@@ -34,3 +39,8 @@ class TopologyGraph(AbstractGraph):
 
     def __iter__(self):
         pass
+
+    def dfs(self, node=None):
+        if node is None:
+            node = self.gateway
+        
