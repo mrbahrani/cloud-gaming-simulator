@@ -3,6 +3,7 @@ from queue import Queue
 from typing import List
 
 from game import Game
+from gateway import Gateway
 from globals import global_id_generator
 from host import Host
 from player import Player
@@ -37,9 +38,13 @@ def load_games(file_name:str= 'games.json'):
 def parse_fat_tree_dict(topology_dict: dict):
     q = Queue()
     g = TopologyGraph(global_id_generator)
+    # create the class gateway
+    data_center_gateway = Gateway()
+    g.add_node(data_center_gateway)
     for switch in topology_dict["switches"]:
         sw = Switch()
         g.add_node(sw)
+        g.add_edge(data_center_gateway, sw, {})
         q.put((switch, sw))
     while not q.empty():
         s, p = q.get()
