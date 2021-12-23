@@ -78,7 +78,7 @@ class SimulationEngine:
 
     def add_new_events(self):
         for g in self.games:
-            events = g.generate_events()
+            events = g.generate_events(self.current_time)
             for e in events:
                 self.event_queue.add_item(e.end, e)
 

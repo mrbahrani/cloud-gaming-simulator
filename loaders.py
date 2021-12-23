@@ -1,25 +1,37 @@
 import json
 from queue import Queue
+from typing import List
 
 from game import Game
 from globals import global_id_generator
 from host import Host
+from player import Player
 from switch import Switch
 from topologygraph import TopologyGraph
+from globals import global_id_generator
+from uniformgenerator import UniformTimeGenerator
+
+
+def convert_to_player(player_dict):
+    dist = None
+    if player_dict["packet_distribution"] == "uniform":
+        dist = UniformTimeGenerator(0, 10, 1)
+    return Player(player_dict["id"], dist)
+
+
+def create_players(player_dicts):
+    return list(map(convert_to_player, player_dicts))
 
 
 def load_games(file_name:str= 'games.json'):
     with open(file_name, 'r') as games_file:
         games = json.load(games_file)
-    gamesList = []
-    print(games)
+    games_list = []
     for game_dict in games["games"]:
-        print(game_dict)
-        g = Game()
-        g.id = game_dict["id"]
-        g.hosts = game_dict["hosts"]
-        gamesList.append(g)
-    return gamesList
+        players: List[Player] = create_players(game_dict['players'])
+        g = Game(global_id_generator.getNextId(), game_dict['hosts'], players)
+        games_list.append(g)
+    return games_list
 
 
 def parse_fat_tree_dict(topology_dict: dict):

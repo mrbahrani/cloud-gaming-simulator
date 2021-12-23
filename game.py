@@ -15,7 +15,7 @@ class Game:
         events = []
         for p in self.players:
             # ToDo Different reach-out time for players
-            packet = p.create_next_packet()
-            e = Event(EventCodes.PACKET_IN_NETWORK, current_time, current_time + p.reach_out_time)
+            packet = p.create_next_packet(self)
+            e = Event(EventCodes.PACKET_IN_NETWORK, current_time, current_time + p.reach_out_time, packet)
             events.append(e)
         return events

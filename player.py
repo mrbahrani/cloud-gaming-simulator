@@ -8,8 +8,8 @@ class Player:
     def __init__(self, identity,  time_gen: TimeGenerator, reach_out_time: float = 1.0):
         self.id: str = identity
         self.packet_time_generator: TimeGenerator = time_gen
-        self.naunce = randint(0, 100)
-        self.last_packet_id = self.naunce - 1
+        self.nuance = randint(0, 100)
+        self.last_packet_id = self.nuance - 1
         self.reach_out_time = reach_out_time
 
     def create_next_packet(self, game):
