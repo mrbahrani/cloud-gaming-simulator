@@ -10,13 +10,22 @@ def group_by_game(paths_by_host, games: List[Game]):
     for game in games:
         result[game] = []
         for host in game.hosts:
-            result[game] += paths_by_host[host]
+            if game in result:
+                result[game] += paths_by_host[host]
+            else:
+                result[game] = paths_by_host[host]
     return result
 
 
 class MockController(Controller):
-    def __init__(self, tg: TopologyGraph, games: List[Game]):
-        paths_by_host = tg.dfs()
+    def preprocess(self):
+        pass
+
+    def __init__(self):
+        self.paths_by_game = None
+
+    def initialize(self, tg: TopologyGraph, games: List[Game]):
+        paths_by_host = tg.get_path_dict()
         self.paths_by_game = group_by_game(paths_by_host, games)
 
     def set_path(self, packet):

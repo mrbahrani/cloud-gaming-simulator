@@ -7,3 +7,6 @@ class Controller(ABC):
 
     def preprocess(self):
         raise NotImplementedError
+
+    def initialize(self, *args):
+        pass

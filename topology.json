@@ -15,6 +15,9 @@
                     "hosts": [
                       {
                         "name": "host1"
+                      },
+                      {
+                        "name": "host2"
                       }
                     ]
                   }

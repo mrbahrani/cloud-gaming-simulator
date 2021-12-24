@@ -1,5 +1,6 @@
 from absgraph import AbstractGraph
 from gateway import Gateway
+from host import Host
 from idgenerator import IDGenerator
 from simulationentity import SimulationEntity
 
@@ -13,10 +14,11 @@ class TopologyGraph(AbstractGraph):
         self.gateway = None
 
     def add_node(self, item: SimulationEntity):
-        if isinstance(item, Gateway):
-            self.gateway = item
         while item.id == 0 or item.id in self.adj_list:
             item.id = self.id_gen.getNextId()
+        if isinstance(item, Gateway):
+            self.gateway = item
+            self.gateway.paths = [[self.gateway.id]]
         self.adj_list[item.id] = []
         self.id_object_map[item.id] = item
         return item
@@ -25,6 +27,8 @@ class TopologyGraph(AbstractGraph):
         # ToDo exception handling
         self.adj_list[item1.id].append((item2.id, "out", edge_properties))
         self.adj_list[item2.id].append((item1.id, "in", edge_properties))
+        for p in item1.paths:
+            item2.paths.append(p+[item2.id])
 
     def get_inward_edges(self, item):
         return map(lambda x: (x[0], x[2]), filter(lambda x: x[1] == "in", self.adj_list[item.id]))
@@ -41,6 +45,23 @@ class TopologyGraph(AbstractGraph):
         pass
 
     def dfs(self, node=None):
+        paths = dict()
         if node is None:
-            node = self.gateway
-        
+            node = self.gateway.id
+        visited = dict(map(lambda x: (x[0], False), self.id_object_map.items()))
+        stack = [node]
+        while len(stack) != 0:
+            n = stack.pop()
+            visited[n] = True
+            neighbors = self.get_outward_edges(n)
+            for nn, _ in neighbors:
+                if not visited[nn]:
+                    stack.append(nn)
+        return paths
+
+    def get_path_dict(self):
+        r = dict()
+        for i, d in self.id_object_map.items():
+            if isinstance(d, Host):
+                r[i] = d.paths
+        return r

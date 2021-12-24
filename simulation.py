@@ -20,6 +20,7 @@ class SimulationEngine:
         self.current_time = 0.0
         self.completed_tasks = []
         self.dropped_tasks = []
+        self.controller.initialize(self.topology, self.games)
 
     def run_next_event(self):
         _, e = self.event_queue.poll()
