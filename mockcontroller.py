@@ -29,5 +29,5 @@ class MockController(Controller):
         self.paths_by_game = group_by_game(paths_by_host, games)
 
     def set_path(self, packet):
-        pass
+        packet.set_path(self.paths_by_game[packet.game][0])
 
