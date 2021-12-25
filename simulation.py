@@ -1,4 +1,5 @@
 import math
+from random import random
 from typing import List
 
 from absgraph import AbstractGraph
@@ -28,6 +29,7 @@ class SimulationEngine:
             self.controller.set_path(e.packet)
             new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet)
             self.event_queue.add_item(new_event.end, new_event)
+            pass
         elif e.code == EventCodes.PACKET_ARRIVED_SWITCH:
             time_in_queue = self.estimate_time_in_queue(e)
             if time_in_queue == -1:
@@ -87,7 +89,7 @@ class SimulationEngine:
         sw: Switch = e.device
         sz = sw.packet_queue.qsize()
         if sz == sw.max_size:
-            return -1
+            return 0.004 * random() + 0.001
         return (sz+1) * sw.sending_packet_time
 
     def estimate_processing_time(self, e: Event):
