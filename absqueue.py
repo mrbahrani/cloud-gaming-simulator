@@ -3,7 +3,7 @@ from abc import ABC
 
 class AbstractPriorityQueue(ABC):
     def __init__(self):
-        raise NotImplementedError
+        pass
 
     def add_item(self, key, value=None):
         raise NotImplementedError
