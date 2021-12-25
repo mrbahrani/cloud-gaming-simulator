@@ -2,7 +2,7 @@
   "games": [
     {
       "id": 0,
-      "hosts": [2, 3],
+      "hosts": ["host1", "host2"],
       "players": [
         {
           "id": "p0",
