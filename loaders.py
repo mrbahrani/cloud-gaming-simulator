@@ -30,7 +30,7 @@ def load_games(file_name:str= 'games.json'):
     games_list = []
     for game_dict in games["games"]:
         players: List[Player] = create_players(game_dict['players'])
-        g = Game(global_id_generator.getNextId(), game_dict['hosts'], players)
+        g = Game(global_id_generator.getNextId(), list(map(hash, game_dict['hosts'])), players)
         games_list.append(g)
     return games_list
 
@@ -56,7 +56,7 @@ def parse_fat_tree_dict(topology_dict: dict):
                 g.add_edge(p, sw, {})
         if 'hosts' in s:
             for host in s["hosts"]:
-                h = Host()
+                h = Host(identity=hash(host["name"]))
                 g.add_node(h)
                 g.add_edge(p, h, {})
     return g
