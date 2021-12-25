@@ -1,17 +1,19 @@
 from abc import ABC
 from heapq import *
+from random import random
+
 from absqueue import *
 
 
 class HeapQueue(AbstractPriorityQueue):
     def __init__(self):
+        super().__init__()
         self.h = list()
         self.di = dict()
 
     def add_item(self, key, value=None):
         if key in self.di:
-            self.di[key] = value
-            return None
+            key += (0.004 * random() + 0.001)
         heappush(self.h, key)
         self.di[key] = value
 
@@ -30,6 +32,7 @@ class HeapQueue(AbstractPriorityQueue):
         try:
             k = heappop(self.h)
             v = self.di[k]
+            self.di.pop(k)
             return k, v
         except IndexError:
             return None, None
