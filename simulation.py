@@ -27,9 +27,9 @@ class SimulationEngine:
         _, e = self.event_queue.poll()
         if e.code == EventCodes.PACKET_IN_NETWORK:
             self.controller.set_path(e.packet)
-            new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet)
+            device = self.topology.map(e.packet.go_to_next_hop())
+            new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet, device)
             self.event_queue.add_item(new_event.end, new_event)
-            pass
         elif e.code == EventCodes.PACKET_ARRIVED_SWITCH:
             time_in_queue = self.estimate_time_in_queue(e)
             if time_in_queue == -1:
@@ -39,12 +39,23 @@ class SimulationEngine:
                               self.current_time + time_in_queue, e.packet)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE:
-            nxt_hop = e.packet.next_hop()
-            if isinstance(self.topology.map(nxt_hop), Switch):
-                new_event = Event()
-            else:
-                new_event = Event()
+            # First none end time, second bandwidth object
+            current_hop = e.device.id
+            nxt_hop = e.packet.peek_next_hop()
+            bandwidth = None
+            new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, None, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
+        elif e.code == EventCodes.PACKET_TRANSMITTED:
+            bandwidth = e.device
+            next_hop = self.topology.map(e.packet.go_to_next_hop())
+            if isinstance(next_hop, Host):
+                pass
+            elif isinstance(next_hop, Switch):
+                pass
+            else:
+                # datacenter gateway
+                pass
+
         elif e.code == EventCodes.PACKET_ARRIVED_HOST:
             h:Host = e.device
             processing_time = h.estimate_task_time(e.task)

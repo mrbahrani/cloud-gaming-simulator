@@ -11,6 +11,9 @@ class Bandwidth:
     def upstream_utilization(self):
         return self.upstream_occupied / self.upstream
 
+    def add_packet(self, packet):
+        pass
+
 
 
 
