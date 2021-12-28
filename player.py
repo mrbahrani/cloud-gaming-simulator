@@ -16,11 +16,11 @@ class Player:
         self.last_packet_id += 1
         t = self.create_task()
         s = self.create_packet_size()
-        packet = Packet(self.last_packet_id, self, game, s, -1, t)
+        packet = Packet(self.last_packet_id, self, game, s, t, None, 'res')
         return packet
 
     def create_task(self):
         pass
 
     def create_packet_size(self):
-        pass
+        return 10
