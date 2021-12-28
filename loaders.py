@@ -2,6 +2,7 @@ import json
 from queue import Queue
 from typing import List
 
+from bandwidth import Bandwidth
 from game import Game
 from gateway import Gateway
 from globals import global_id_generator
@@ -44,7 +45,7 @@ def parse_fat_tree_dict(topology_dict: dict):
     for switch in topology_dict["switches"]:
         sw = Switch()
         g.add_node(sw)
-        g.add_edge(data_center_gateway, sw, {})
+        g.add_edge(data_center_gateway, sw, {"bandwidth": Bandwidth()})
         q.put((switch, sw))
     while not q.empty():
         s, p = q.get()
@@ -53,12 +54,12 @@ def parse_fat_tree_dict(topology_dict: dict):
                 sw = Switch()
                 g.add_node(sw)
                 q.put((switch, sw))
-                g.add_edge(p, sw, {})
+                g.add_edge(p, sw, {"bandwidth": Bandwidth()})
         if 'hosts' in s:
             for host in s["hosts"]:
                 h = Host(identity=hash(host["name"]))
                 g.add_node(h)
-                g.add_edge(p, h, {})
+                g.add_edge(p, h, {"bandwidth": Bandwidth()})
     return g
 
 

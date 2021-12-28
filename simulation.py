@@ -42,8 +42,9 @@ class SimulationEngine:
             # First none end time, second bandwidth object
             current_hop = e.device.id
             nxt_hop = e.packet.peek_next_hop()
-            bandwidth = None
-            new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, None, e.packet, bandwidth)
+            bandwidth = self.topology.get_outward_edges(current_hop)
+            arrival_time = bandwidth.add_packet(e.packet, self.current_time)
+            new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_TRANSMITTED:
             bandwidth = e.device

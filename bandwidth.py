@@ -1,19 +1,56 @@
+import math
+
+from event import Event
+from eventcodes import EventCodes
+
+
 class Bandwidth:
-    def __init__(self, downstream=10, upstream=10):
-        self.downstream = downstream
-        self.upstream = upstream
-        self.downstream_occupied = 0
-        self.upstream_occupied = 0
+    def __init__(self, rate=10, cap=math.inf):
+        self.cap = cap
+        self.rate = rate
+        self.last_update_time = 0
+        self.active_time = 0
+        self.is_active = False
+        self.bytes_transmitted = 0
+        self.queue = []
 
-    def downstream_utilization(self):
-        return self.downstream_occupied / self.downstream
+    def update(self, current_time):
+        if self.is_active:
+            passed_time = self.last_update_time - current_time
+            potential_transmitted_bytes = passed_time * self.rate
+            left_bytes = potential_transmitted_bytes
+            actually_transmitted_bytes = 0
+            while left_bytes > 0:
+                tq = self.queue[0]
+                if tq[1] > left_bytes:
+                    actually_transmitted_bytes += left_bytes
+                    self.queue[0][1] -= left_bytes
+                    left_bytes = 0
+                elif tq[1] == left_bytes:
+                    actually_transmitted_bytes += left_bytes
+                    self.queue[0][1] -= left_bytes
+                    left_bytes = 0
+                    self.queue.pop(0)
+                else:
+                    actually_transmitted_bytes += self.queue[0][1]
+                    left_bytes -= self.queue[0][1]
+                    self.queue[0][1] = 0
+                    self.queue.pop(0)
 
-    def upstream_utilization(self):
-        return self.upstream_occupied / self.upstream
+            self.active_time += (actually_transmitted_bytes/ potential_transmitted_bytes) * passed_time
+        self.last_update_time = current_time
 
-    def add_packet(self, packet):
-        pass
+    def get_utilization(self):
+        if self.active_time == 0:
+            return 1
+        return self.bytes_transmitted / (self.active_time * self.rate)
 
+    def add_packet(self, packet, current_time):
+        self.update(current_time)
+        self.is_active = True
+        self.queue.append([packet, packet.length])
+        time_to_arrive = sum(map(lambda x: x[1], self.queue))
+        return current_time + time_to_arrive
 
 
 
