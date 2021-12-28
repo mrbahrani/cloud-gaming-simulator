@@ -36,7 +36,8 @@ class Bandwidth:
                     left_bytes -= self.queue[0][1]
                     self.queue[0][1] = 0
                     self.queue.pop(0)
-
+            if potential_transmitted_bytes == 0:
+                return
             self.active_time += (actually_transmitted_bytes/ potential_transmitted_bytes) * passed_time
         self.last_update_time = current_time
 
