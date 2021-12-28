@@ -25,6 +25,7 @@ class SimulationEngine:
 
     def run_next_event(self):
         _, e = self.event_queue.poll()
+        self.current_time = e.end
         if e.code == EventCodes.PACKET_IN_NETWORK:
             self.controller.set_path(e.packet)
             device = self.topology.map(e.packet.go_to_next_hop())
@@ -33,38 +34,46 @@ class SimulationEngine:
         elif e.code == EventCodes.PACKET_ARRIVED_SWITCH:
             time_in_queue = self.estimate_time_in_queue(e)
             if time_in_queue == -1:
-                new_event = Event(EventCodes.PACKET_DROPPED, self.current_time, self.current_time, e.packet)
+                new_event = Event(EventCodes.PACKET_DROPPED, self.current_time, self.current_time, e.packet, e.device)
                 self.event_queue.add_item(new_event.end, new_event)
+                return
             new_event = Event(EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE, self.current_time,
-                              self.current_time + time_in_queue, e.packet)
+                              self.current_time + time_in_queue, e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE:
             # First none end time, second bandwidth object
             current_hop = e.device.id
             nxt_hop = e.packet.peek_next_hop()
-            bandwidth = self.topology.get_outward_edges(current_hop)
+            bandwidth = self.topology.get_edge_properties(current_hop, nxt_hop)["bandwidth"]
             arrival_time = bandwidth.add_packet(e.packet, self.current_time)
             new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_TRANSMITTED:
-            bandwidth = e.device
             next_hop = self.topology.map(e.packet.go_to_next_hop())
             if isinstance(next_hop, Host):
-                pass
+                new_event = Event(EventCodes.PACKET_ARRIVED_HOST, self.current_time, self.current_time, e.packet,
+                                  next_hop)
             elif isinstance(next_hop, Switch):
-                pass
+                new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet,
+                                  next_hop)
             else:
-                # datacenter gateway
+                new_event = Event(EventCodes.PACKET_LEFT_DATACENTER, self.current_time, self.current_time, e.packet,
+                                  next_hop)
                 pass
-
+            self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_ARRIVED_HOST:
-            h:Host = e.device
-            processing_time = h.estimate_task_time(e.task)
+            h: Host = e.device
+            processing_time = h.estimate_task_time(e.packet.task)
             new_event = Event(EventCodes.PACKET_PROCESS_FINISHED, self.current_time, self.current_time + processing_time
-                              , e.packet)
+                              , e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_PROCESS_FINISHED:
-            pass
+            current_hop = e.device.id
+            nxt_hop = e.packet.peek_next_hop()
+            bandwidth = self.topology.get_edge_properties(current_hop, nxt_hop)["bandwidth"]
+            arrival_time = bandwidth.add_packet(e.packet, self.current_time)
+            new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
+            self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_LEFT_DATACENTER:
             self.completed_tasks.append(e.packet)
         elif e.code == EventCodes.PACKET_DROPPED:
@@ -74,8 +83,8 @@ class SimulationEngine:
             pass
 
     def start(self, stop_time=math.inf):
-        while self.current_time <= stop_time:
-            self.add_new_events()
+        self.add_game_events()
+        while self.current_time <= stop_time or self.event_queue.empty():
             self.run_next_event()
 
     def pause(self):
@@ -91,7 +100,7 @@ class SimulationEngine:
         # ToDo implement it!
         pass
 
-    def add_new_events(self):
+    def add_game_events(self):
         for g in self.games:
             events = g.generate_events(self.current_time)
             for e in events:
