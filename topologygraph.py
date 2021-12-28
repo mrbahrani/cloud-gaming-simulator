@@ -25,10 +25,25 @@ class TopologyGraph(AbstractGraph):
 
     def add_edge(self, item1: SimulationEntity, item2: SimulationEntity, edge_properties: dict):
         # ToDo exception handling
+        if isinstance(item1, int):
+            item1 = self.map(item1)
+        if isinstance(item2, int):
+            item2 = self.map(item2)
+
         self.adj_list[item1.id].append((item2.id, "out", edge_properties))
         self.adj_list[item2.id].append((item1.id, "in", edge_properties))
         for p in item1.paths:
             item2.paths.append(p+[item2.id])
+
+    def get_edge_properties(self, item1, item2, direction="out"):
+        if isinstance(item1, int):
+            item1 = self.map(item1)
+        if isinstance(item2, int):
+            item2 = self.map(item2)
+        if direction == "out":
+            return list(filter(lambda x: x[0] == item2.id, self.get_outward_edges(item1)))[0][1]
+        else:
+            return list(filter(lambda x: x[0] == item2.id, self.get_inward_edges(item1)))[0][1]
 
     def get_inward_edges(self, item):
         return map(lambda x: (x[0], x[2]), filter(lambda x: x[1] == "in", self.adj_list[item.id]))

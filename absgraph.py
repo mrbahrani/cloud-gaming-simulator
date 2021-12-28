@@ -17,6 +17,9 @@ class AbstractGraph(ABC):
     def get_outward_edges(self, item):
         raise NotImplementedError
 
+    def get_edge_properties(self, item1, item2, direction="out"):
+        raise NotImplementedError
+
     def __iter__(self):
         raise NotImplementedError
 
