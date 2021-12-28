@@ -45,7 +45,9 @@ def parse_fat_tree_dict(topology_dict: dict):
     for switch in topology_dict["switches"]:
         sw = Switch()
         g.add_node(sw)
-        g.add_edge(data_center_gateway, sw, {"bandwidth": Bandwidth()})
+        bw = Bandwidth()
+        g.add_edge(data_center_gateway, sw, {"bandwidth": bw})
+        g.add_edge(sw, data_center_gateway, {"bandwidth": bw})
         q.put((switch, sw))
     while not q.empty():
         s, p = q.get()
@@ -54,12 +56,16 @@ def parse_fat_tree_dict(topology_dict: dict):
                 sw = Switch()
                 g.add_node(sw)
                 q.put((switch, sw))
-                g.add_edge(p, sw, {"bandwidth": Bandwidth()})
+                bw = Bandwidth()
+                g.add_edge(p, sw, {"bandwidth": bw})
+                g.add_edge(sw, p, {"bandwidth": bw})
         if 'hosts' in s:
             for host in s["hosts"]:
                 h = Host(identity=hash(host["name"]))
                 g.add_node(h)
-                g.add_edge(p, h, {"bandwidth": Bandwidth()})
+                bw = Bandwidth()
+                g.add_edge(p, h, {"bandwidth": bw})
+                g.add_edge(h, p, {"bandwidth": bw})
     return g
 
 
