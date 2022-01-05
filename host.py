@@ -1,6 +1,7 @@
 import math
 from queue import Queue
 
+from distributanmaker import DistributionMaker
 from simulationentity import SimulationEntity
 
 
@@ -16,9 +17,13 @@ class Host(SimulationEntity):
         self.waiting_tasks = Queue()
         # To be moved to another host
         self.task_finishing_time = 1
+        self.dist = DistributionMaker()
+        self.dist.get_address("ds.txt")
 
-    def estimate_task_time(self, task):
+    def estimate_task_time(self, packet):
+        pass
         # This is the easiest way to simulate should be changed
+        packet.length = float(self.dist.generate_sample()[0])
         return self.task_finishing_time
 
     def add_task(self, task):
