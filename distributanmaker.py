@@ -13,23 +13,23 @@ class DistributionMaker:
         self.model = KernelDensity(bandwidth=2, kernel='gaussian')
         self.data = False
 
-    def _add_from_file(self, address):
+    def _add_from_file(self, address,column_number):
         data = loadtxt(address)
         if self.data is False:
-            self.data = data[:, -1].reshape((len(data), 1))
+            self.data = data[:, column_number].reshape((len(data), 1))
         else:
             self.data = np.append(self.data, data[:, -1].reshape((len(data), 1)), axis=0)
 
-    def get_address(self, address, directory=False):
+    def get_address(self, address, directory=False,column_number=-1):
         if directory is not False:
             for subdir, dirs, files in os.walk(address):
                 for filename in files:
                     filepath = subdir + os.sep + filename
                     if filepath.endswith(".txt"):
                         #print(999,filepath)
-                        self._add_from_file(filepath)
+                        self._add_from_file(filepath,column_number)
         else:
-            self._add_from_file(address)
+            self._add_from_file(address,column_number)
 
         self.model.fit(self.data)
 
