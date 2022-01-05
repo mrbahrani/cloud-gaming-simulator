@@ -9,6 +9,7 @@ from eventcodes import EventCodes
 from game import Game
 from heap import HeapQueue
 from host import Host
+from packet import Packet
 from switch import Switch
 from matplotlib import pyplot as plt
 
@@ -65,7 +66,7 @@ class SimulationEngine:
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_ARRIVED_HOST:
             h: Host = e.device
-            processing_time = h.estimate_task_time(e.packet.task)
+            processing_time = h.estimate_task_time(e.packet)
             new_event = Event(EventCodes.PACKET_PROCESS_FINISHED, self.current_time, self.current_time + processing_time
                               , e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
@@ -127,6 +128,6 @@ class SimulationEngine:
 
     def estimate_processing_time(self, e: Event):
         host: Host = e.device
-        t = host.estimate_task_time(e.packet.task)
+        t = host.estimate_task_time(e.packet)
         host.add_task(e.packet.task)
         return t
