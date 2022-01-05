@@ -16,11 +16,16 @@ class Bandwidth:
 
     def update(self, current_time):
         if self.is_active:
-            passed_time = self.last_update_time - current_time
+            passed_time = current_time - self.last_update_time
+            print("pre", self.queue)
             potential_transmitted_bytes = passed_time * self.rate
             left_bytes = potential_transmitted_bytes
+            print("potential bytes", potential_transmitted_bytes)
             actually_transmitted_bytes = 0
             while left_bytes > 0:
+                if len(self.queue) == 0:
+                    self.is_active = False
+                    break
                 tq = self.queue[0]
                 if tq[1] > left_bytes:
                     actually_transmitted_bytes += left_bytes
@@ -40,6 +45,7 @@ class Bandwidth:
                 return
             self.active_time += (actually_transmitted_bytes/ potential_transmitted_bytes) * passed_time
         self.last_update_time = current_time
+        print(self.queue)
 
     def get_utilization(self):
         if self.active_time == 0:
@@ -47,10 +53,10 @@ class Bandwidth:
         return self.bytes_transmitted / (self.active_time * self.rate)
 
     def add_packet(self, packet, current_time):
-        self.update(current_time)
         self.is_active = True
+        self.update(current_time)
         self.queue.append([packet, packet.length])
-        time_to_arrive = sum(map(lambda x: x[1], self.queue))
+        time_to_arrive = sum(map(lambda x: x[1], self.queue)) / self.rate
         return current_time + time_to_arrive
 
 
