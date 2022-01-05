@@ -27,6 +27,7 @@ class SimulationEngine:
         _, e = self.event_queue.poll()
         self.current_time = e.end
         if e.code == EventCodes.PACKET_IN_NETWORK:
+            e.packet.start = self.current_time
             self.controller.set_path(e.packet)
             device = self.topology.map(e.packet.go_to_next_hop())
             new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet, device)
@@ -75,16 +76,18 @@ class SimulationEngine:
             new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_LEFT_DATACENTER:
+            e.packet.end = self.current_time
             self.completed_tasks.append(e.packet)
         elif e.code == EventCodes.PACKET_DROPPED:
             self.dropped_tasks.append(e.packet)
         else:
             # unknown event
             pass
+    pass
 
     def start(self, stop_time=math.inf):
         self.add_game_events()
-        while self.current_time <= stop_time or self.event_queue.empty():
+        while self.current_time <= stop_time and not self.event_queue.empty():
             self.run_next_event()
 
     def pause(self):
@@ -97,8 +100,8 @@ class SimulationEngine:
         pass
 
     def create_report(self):
-        # ToDo implement it!
-        pass
+        for p in self.completed_tasks:
+            print("packet", p.start, p.end)
 
     def add_game_events(self):
         for g in self.games:

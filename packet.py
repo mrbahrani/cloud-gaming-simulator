@@ -10,6 +10,8 @@ class Packet:
         self.history = dict()
         self.path = None
         self.current_next_hop = 0
+        self.start = 0
+        self.end = 0
 
     def set_path(self, path):
         self.path = path

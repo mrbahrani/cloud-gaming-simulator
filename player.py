@@ -23,4 +23,4 @@ class Player:
         pass
 
     def create_packet_size(self):
-        return 10
+        return 1
