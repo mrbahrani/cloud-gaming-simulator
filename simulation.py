@@ -10,6 +10,7 @@ from game import Game
 from heap import HeapQueue
 from host import Host
 from switch import Switch
+from matplotlib import pyplot as plt
 
 
 class SimulationEngine:
@@ -100,6 +101,14 @@ class SimulationEngine:
         pass
 
     def create_report(self):
+        latencies = list(map(lambda p: p.end - p.start, self.completed_tasks))
+        fig = plt.figure(figsize=(10, 7))
+
+        # Creating plot
+        plt.boxplot(latencies)
+
+        # show plot
+        plt.show()
         for p in self.completed_tasks:
             print("packet", p.start, p.end)
 

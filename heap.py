@@ -15,8 +15,7 @@ class HeapQueue(AbstractPriorityQueue):
     def add_item(self, key, value=None):
         if key in self.di:
             key += (0.004 * random() + 0.001)
-            if isinstance(value, Event):
-                return value.end == key
+            value.end = key
         heappush(self.h, key)
         self.di[key] = value
 
