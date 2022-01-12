@@ -7,11 +7,12 @@ class Packet:
         self.task = task
         self.length = l
         self.type = typ
-        self.history = dict()
+        self.history = []
         self.path = None
         self.current_next_hop = 0
         self.start = 0
         self.end = 0
+        self.packets_ahead = 0
 
     def set_path(self, path):
         self.path = path

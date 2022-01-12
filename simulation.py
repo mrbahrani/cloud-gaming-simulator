@@ -28,6 +28,7 @@ class SimulationEngine:
     def run_next_event(self):
         _, e = self.event_queue.poll()
         self.current_time = e.end
+        e.packet.history.append([self.current_time, e.device])
         if e.code == EventCodes.PACKET_IN_NETWORK:
             e.packet.start = self.current_time
             self.controller.set_path(e.packet)
@@ -35,6 +36,7 @@ class SimulationEngine:
             new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet, device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_ARRIVED_SWITCH:
+            e.packet.packets_ahead = e.device.packet_queue.qsize()
             time_in_queue = self.estimate_time_in_queue(e)
             if time_in_queue == -1:
                 new_event = Event(EventCodes.PACKET_DROPPED, self.current_time, self.current_time, e.packet, e.device)
@@ -44,7 +46,7 @@ class SimulationEngine:
                               self.current_time + time_in_queue, e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE:
-            # First none end time, second bandwidth object
+            e.packet.packets_ahead = 0
             current_hop = e.device.id
             nxt_hop = e.packet.peek_next_hop()
             bandwidth = self.topology.get_edge_properties(current_hop, nxt_hop)["bandwidth"]
@@ -109,7 +111,7 @@ class SimulationEngine:
         plt.boxplot(latencies)
 
         # show plot
-        plt.show()
+        # plt.show()
         for p in self.completed_tasks:
             print("packet", p.start, p.end)
 
@@ -121,7 +123,7 @@ class SimulationEngine:
 
     def estimate_time_in_queue(self, e):
         sw: Switch = e.device
-        sz = sw.packet_queue.qsize()
+        sz = e.packet.packets_ahead
         if sz == sw.max_size:
             return 0.004 * random() + 0.001
         return (sz+1) * sw.sending_packet_time

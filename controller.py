@@ -10,3 +10,6 @@ class Controller(ABC):
 
     def initialize(self, *args):
         pass
+
+    def get_feedback(self, packet):
+        raise NotImplementedError
