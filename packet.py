@@ -13,6 +13,7 @@ class Packet:
         self.start = 0
         self.end = 0
         self.packets_ahead = 0
+        self.extras = None
 
     def set_path(self, path):
         self.path = path

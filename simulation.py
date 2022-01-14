@@ -23,7 +23,8 @@ class SimulationEngine:
         self.current_time = 0.0
         self.completed_tasks = []
         self.dropped_tasks = []
-        self.controller.initialize(self.topology, self.games)
+        # self.controller.initialize(self.topology, self.games)
+        self.controller.initialize(self.topology)
 
     def run_next_event(self):
         _, e = self.event_queue.poll()
@@ -81,6 +82,8 @@ class SimulationEngine:
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_LEFT_DATACENTER:
             e.packet.end = self.current_time
+            e.packet.extras[1] = e.packet.end - e.packet.start
+            self.controller.get_feedback(e.packet)
             self.completed_tasks.append(e.packet)
         elif e.code == EventCodes.PACKET_DROPPED:
             self.dropped_tasks.append(e.packet)
