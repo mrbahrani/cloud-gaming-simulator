@@ -39,7 +39,7 @@ class DistributionMaker:
         probabilities = self.model.score_samples(values)
         probabilities = exp(probabilities)
         new_samples = self.model.sample(1000, random_state=None)
-        pyplot.hist(self.data, bins=bins, density=True,label='real samples')
+        pyplot.hist(self.data, bins=bins, density=True, label='real samples')
         pyplot.title(label='chart')
         pyplot.xlabel(xlabel='data value')
         pyplot.ylabel(ylabel='histogram (number of sample)')

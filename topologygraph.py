@@ -1,12 +1,13 @@
 from absgraph import AbstractGraph
 from gateway import Gateway
+from globals import global_id_generator
 from host import Host
 from idgenerator import IDGenerator
 from simulationentity import SimulationEntity
 
 
 class TopologyGraph(AbstractGraph):
-    def __init__(self, id_generator: IDGenerator):
+    def __init__(self, id_generator: IDGenerator=global_id_generator):
         super().__init__()
         self.adj_list = dict()
         self.id_object_map = dict()

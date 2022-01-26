@@ -3,7 +3,7 @@ class Packet:
         self.id = identity
         self.player = player
         self.game = game
-        self.timout = timeout
+        self.timeout = timeout
         self.task = task
         self.length = l
         self.type = typ

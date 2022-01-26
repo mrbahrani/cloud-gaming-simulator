@@ -2,6 +2,8 @@ import math
 from random import random
 from typing import List
 
+import numpy as np
+
 from absgraph import AbstractGraph
 from absqueue import AbstractPriorityQueue
 from event import Event
@@ -31,7 +33,7 @@ class SimulationEngine:
         self.current_time = e.end
         e.packet.history.append([self.current_time, e.device])
         if e.code == EventCodes.PACKET_IN_NETWORK:
-            e.packet.start = self.current_time
+            # e.packet.start = self.current_time
             self.controller.set_path(e.packet)
             device = self.topology.map(e.packet.go_to_next_hop())
             new_event = Event(EventCodes.PACKET_ARRIVED_SWITCH, self.current_time, self.current_time, e.packet, device)
@@ -43,17 +45,20 @@ class SimulationEngine:
                 new_event = Event(EventCodes.PACKET_DROPPED, self.current_time, self.current_time, e.packet, e.device)
                 self.event_queue.add_item(new_event.end, new_event)
                 return
+            sw: Switch = e.device
+            sw.receive(e.packet)
             new_event = Event(EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE, self.current_time,
                               self.current_time + time_in_queue, e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_OUTSIDE_SWITCH_QUEUE:
             e.packet.packets_ahead = 0
-            current_hop = e.device.id
+            current_hop: Switch = self.topology.map(e.device.id)
             nxt_hop = e.packet.peek_next_hop()
             bandwidth = self.topology.get_edge_properties(current_hop, nxt_hop)["bandwidth"]
             arrival_time = bandwidth.add_packet(e.packet, self.current_time)
             new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
+            current_hop.send()
         elif e.code == EventCodes.PACKET_TRANSMITTED:
             next_hop = self.topology.map(e.packet.go_to_next_hop())
             if isinstance(next_hop, Host):
@@ -65,15 +70,15 @@ class SimulationEngine:
             else:
                 new_event = Event(EventCodes.PACKET_LEFT_DATACENTER, self.current_time, self.current_time, e.packet,
                                   next_hop)
-                pass
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_ARRIVED_HOST:
             h: Host = e.device
-            processing_time = h.estimate_task_time(e.packet)
-            new_event = Event(EventCodes.PACKET_PROCESS_FINISHED, self.current_time, self.current_time + processing_time
+            processing_time = h.estimate_task_time(e.packet, self.current_time)
+            new_event = Event(EventCodes.PACKET_PROCESS_FINISHED, self.current_time, processing_time
                               , e.packet, e.device)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_PROCESS_FINISHED:
+            e.packet.task.completed = True
             current_hop = e.device.id
             nxt_hop = e.packet.peek_next_hop()
             bandwidth = self.topology.get_edge_properties(current_hop, nxt_hop)["bandwidth"]
@@ -81,8 +86,11 @@ class SimulationEngine:
             new_event = Event(EventCodes.PACKET_TRANSMITTED, self.current_time, arrival_time, e.packet, bandwidth)
             self.event_queue.add_item(new_event.end, new_event)
         elif e.code == EventCodes.PACKET_LEFT_DATACENTER:
-            e.packet.end = self.current_time
-            e.packet.extras[1] = e.packet.end - e.packet.start
+            e.packet.end = self.current_time + e.packet.player.reach_out_time
+            try:
+                e.packet.extras[1] = e.packet.end - e.packet.start
+            except:
+                pass
             self.controller.get_feedback(e.packet)
             self.completed_tasks.append(e.packet)
         elif e.code == EventCodes.PACKET_DROPPED:
@@ -90,10 +98,9 @@ class SimulationEngine:
         else:
             # unknown event
             pass
-    pass
 
     def start(self, stop_time=math.inf):
-        self.add_game_events()
+        self.add_game_events(stop_time)
         while self.current_time <= stop_time and not self.event_queue.empty():
             self.run_next_event()
 
@@ -107,28 +114,62 @@ class SimulationEngine:
         pass
 
     def create_report(self):
-        latencies = list(map(lambda p: p.end - p.start, self.completed_tasks))
-        fig = plt.figure(figsize=(10, 7))
+        results = dict()
+        results["paket_loss"] = len(self.dropped_tasks) / (len(self.dropped_tasks) + len(self.completed_tasks))
+        results["timeliness"] = len(list(filter(lambda x: (x.end-x.start) < x.timeout, self.completed_tasks))) / \
+                                len(self.completed_tasks)
+        delays = np.array(list(map(lambda p: p.end - p.start, self.completed_tasks)))
+        results["delay_average"] = delays.mean()
+        results["delay_sd"] = delays.std()
+        results["delay_score"] = np.array(list(map(lambda p: p.timeout - (p.end - p.start), self.completed_tasks))).mean()
+        bws = []
+        for node_list in self.topology.adj_list:
+            for item in self.topology.adj_list[node_list]:
+                bw = item[2]["bandwidth"]
+                bws.append(bw)
+        active_bws = list(filter(lambda x: x.active_time != 0, bws))
+        results["active_rate"] = len(active_bws) / len(bws)
+        utilizations = np.array(list(map(lambda x: x.get_utilization(), bws)))
+        results["bw_mean"] = utilizations.mean()
+        results["bw_std"] = utilizations.std()
 
-        # Creating plot
-        plt.boxplot(latencies)
+        d_scores = np.array(list(map(lambda p: p.timeout - (p.end - p.start), self.completed_tasks)))
+        results["min_d_score"] = d_scores.min()
+        results["max_d_score"] = d_scores.max()
+
+        results["delays_q1"] = np.percentile(d_scores, 25)
+        results["delays_q2"] = np.percentile(d_scores, 50)
+        results["delays_q3"] = np.percentile(d_scores, 75)
+
+        results["min_d_score"] = d_scores.min()
+        results["max_d_score"] = d_scores.max()
+
+        results["d_score_q1"] = np.percentile(d_scores, 25)
+        results["d_score_q2"] = np.percentile(d_scores, 50)
+        results["d_score_q3"] = np.percentile(d_scores, 75)
+
+
+
 
         # show plot
         # plt.show()
         for p in self.completed_tasks:
-            print("packet", p.start, p.end)
+            # print("packet", p.start, p.end, p.end - p.start, p.timeout)
+            pass
+        print(results)
+        return results
 
-    def add_game_events(self):
+    def add_game_events(self, stop_time):
         for g in self.games:
-            events = g.generate_events(self.current_time)
+            events = g.generate_events(stop_time)
             for e in events:
                 self.event_queue.add_item(e.end, e)
 
     def estimate_time_in_queue(self, e):
         sw: Switch = e.device
-        sz = e.packet.packets_ahead
-        if sz == sw.max_size:
-            return 0.004 * random() + 0.001
+        sz = sw.queue_size
+        if sz >= sw.max_size:
+            return -1
         return (sz+1) * sw.sending_packet_time
 
     def estimate_processing_time(self, e: Event):
